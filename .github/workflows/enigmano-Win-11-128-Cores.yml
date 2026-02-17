@@ -33,38 +33,38 @@ jobs:
           if (-not $env:SECRET_SHAHZAIB) { Write-Error "❌ Missing: SECRET_SHAHZAIB"; exit 1 }
           if (-not $env:NGROK_SHAHZAIB) { Write-Error "❌ Missing: NGROK_SHAHZAIB"; exit 1 }
           if (-not "${{ secrets.MRALONE_LK }}") { Write-Error "❌ Missing: MRALONE_LK"; exit 1 }
-          Write-Host "✅ All secrets validated successfully."
+          Write-Host "✅ Secrets validated."
 
-      - name: 📥 Download and Universal Extract
+      - name: 📥 Download and Force Extract
         shell: pwsh
         env:
           ZIP_URL: ${{ secrets.MRALONE_LK }}
         run: |
-          Write-Host "🌐 Discord se ZIP download ho rahi hai..."
-          curl.exe -L -o "package_data.zip" $env:ZIP_URL
+          Write-Host "🌐 Discord se package uthaya ja raha hai..."
+          curl.exe -L -o "package.zip" $env:ZIP_URL
           
-          Write-Host "📦 Files extract ho rahi hain..."
-          Expand-Archive -Path "package_data.zip" -DestinationPath "." -Force
+          Write-Host "📦 Files ko Force Extract kiya ja raha hai..."
+          # Hum ab tar.exe use kar rahe hain jo Expand-Archive se behtar hai
+          mkdir temp_extract
+          tar.exe -xf package.zip -C temp_extract
           
-          Write-Host "🔍 Deep Scanning for EnigMano-instance.ps1..."
-          # Ye command folders ke andar ghus kar file dhoondegi
-          $foundScript = Get-ChildItem -Filter "EnigMano-instance.ps1" -Recurse | Select-Object -First 1
+          Write-Host "🔍 Script dhoondi ja rahi hai..."
+          $script = Get-ChildItem -Path "temp_extract" -Filter "EnigMano-instance.ps1" -Recurse | Select-Object -First 1
           
-          if ($foundScript) {
-            Write-Host "✅ Script mil gayi: $($foundScript.FullName)"
-            $baseDir = Split-Path -Path $foundScript.FullName
-            # Files ko folder se nikal kar bahar (Root) par move kar rahe hain
-            Get-ChildItem -Path "$baseDir\*" | Copy-Item -Destination "." -Force -Recurse
-            Write-Host "🚚 Saari tactical files root par move kar di gayi hain."
+          if ($script) {
+            Write-Host "✅ Script mil gayi: $($script.FullName)"
+            $dir = Split-Path $script.FullName
+            Copy-Item -Path "$dir\*" -Destination "." -Recurse -Force
+            Write-Host "🚚 Saari files root par move kar di gayi hain."
           } else {
-            Write-Error "❌ Error: ZIP ke andar EnigMano-instance.ps1 nahi mili!"
+            Write-Error "❌ Error: ZIP mein EnigMano-instance.ps1 nahi mili!"
             exit 1
           }
 
       - name: ⚔️ Execute Tactical Script
         shell: pwsh
         run: |
-          Write-Host "🚦 Starting EnigMano-instance.ps1 with Bypass Policy..."
+          Write-Host "🚦 EnigMano-instance.ps1 start ho rahi hai..."
           powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-instance.ps1"
 
       - name: 💠 Final Status
@@ -72,6 +72,5 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "==============================================="
-          Write-Host "🏁 Mission Completed Successfully."
-          Write-Host "🔋 Powered by: Mr Alone"
+          Write-Host "🏁 Mission Completed. Powered by: Mr Alone"
           Write-Host "==============================================="
