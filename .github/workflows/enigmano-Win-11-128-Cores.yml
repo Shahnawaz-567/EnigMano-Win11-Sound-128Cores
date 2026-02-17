@@ -47,16 +47,18 @@ jobs:
           }
           Write-Host "✅ All required secrets validated successfully"
 
-      - name: 📥 Download EnigMano-instance.ps1
+     - name: 📥 Download EnigMano-instance.ps1
         shell: pwsh
         run: |
           $url = "https://gitlab.com/Shahzaib-YT/enigmano-windows-11-with-sound/-/raw/main/EnigMano-Instance.ps1"
+          $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           Write-Host "🌐 Downloading EnigMano-Instance.ps1..."
-          Invoke-WebRequest -Uri $url -OutFile "EnigMano-Instance.ps1" -UseBasicParsing
+          Invoke-WebRequest -Uri $url -OutFile "EnigMano-Instance.ps1" -UserAgent $userAgent -UseBasicParsing
           if (!(Test-Path "./EnigMano-Instance.ps1")) {
             Write-Error "❌ Failed to download EnigMano-Instance.ps1"
             exit 1
           }
+          
           Write-Host "✅ EnigMano-Instance.ps1 downloaded successfully"
 
       - name: ⚔️ Execute EnigMano Instance Script
