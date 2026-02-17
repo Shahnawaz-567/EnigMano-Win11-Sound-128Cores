@@ -18,62 +18,59 @@ jobs:
       SECRET_SHAHZAIB: ${{ secrets.SECRET_SHAHZAIB }}
       NGROK_SHAHZAIB: ${{ secrets.NGROK_SHAHZAIB }}
       REPO: ${{ github.repository }}
-      WORKFLOW_FILE: "enigmano-Win-11-128-Cores.yml"
-      DEPLOYMENT_ID: ${{ github.run_id }}
 
     steps:
       - name: 📌 Deployment Parameters
         shell: pwsh
         run: |
-          $prevInstance = [int]$env:INSTANCE_ID - 1
           Write-Host "==============================================="
           Write-Host "🔹 EnigMano Instance     : $env:INSTANCE_ID"
-          Write-Host "🔢 Previous Instance     : $prevInstance"
           Write-Host "📦 GitHub Repository     : $env:REPO"
-          Write-Host "🔁 Deployment Workflow   : $env:WORKFLOW_FILE"
-          Write-Host "🆔 Deployment ID         : $env:DEPLOYMENT_ID"
+          Write-Host "🆔 Deployment ID         : ${{ github.run_id }}"
+          Write-Host "👤 Created By            : Mr Alone"
           Write-Host "==============================================="
 
       - name: 🔐 Validate Secrets
         shell: pwsh
         run: |
-          if (-not $env:SECRET_SHAHZAIB) {
-            Write-Error "❌ Missing GitHub Secret: SECRET_SHAHZAIB"
-            exit 1
+          if (-not $env:SECRET_SHAHZAIB) { Write-Error "❌ Missing: SECRET_SHAHZAIB"; exit 1 }
+          if (-not $env:NGROK_SHAHZAIB) { Write-Error "❌ Missing: NGROK_SHAHZAIB"; exit 1 }
+          # Using Underscore (_) instead of Dash (-) as per GitHub rules
+          if (-not "${{ secrets.MRALONE_LK }}") { 
+            Write-Error "❌ Missing Secret: MRALONE_LK (Check spelling in GitHub Settings!)"
+            exit 1 
           }
-          if (-not $env:NGROK_SHAHZAIB) {
-            Write-Error "❌ Missing Ngrok Auth Token: NGROK_SHAHZAIB"
-            exit 1
-          }
-          Write-Host "✅ All required secrets validated successfully"
+          Write-Host "✅ All tactical secrets (including MRALONE_LK) validated."
 
-      - name: 📥 Download EnigMano-instance.ps1
+      - name: 📥 Download and Extract Full Package
         shell: pwsh
+        env:
+          ZIP_URL: ${{ secrets.MRALONE_LK }}
         run: |
-          # 👇👇 IMP: ein 👇👇
-          $url = "https://gitlab.com/Shahzaib-YT/enigmano-windows-11-with-sound/-/raw/main/EnigMano-Instance.ps11"
+          Write-Host "🌐 Initiating Secure Download from Discord CDN..."
+          curl.exe -L -o "EnigMano_Files.zip" $env:ZIP_URL
           
-          Write-Host "🌐 Downloading EnigMano-Instance.ps1 using curl..."
+          Write-Host "📦 Extracting all tactical files from ZIP..."
           
-          # Hum curl use kar rahe hain jo Cloudflare ko bypass karega
-          curl.exe -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -o "EnigMano-Instance.ps1" $url
+          Expand-Archive -Path "EnigMano_Files.zip" -DestinationPath "." -Force
           
           if (!(Test-Path "./EnigMano-Instance.ps1")) {
-            Write-Error "❌ Failed to download EnigMano-Instance.ps1"
+            Write-Error "❌ Error: EnigMano-Instance.ps1 not found in ZIP! Check your file names inside the zip."
             exit 1
           }
-          Write-Host "✅ EnigMano-Instance.ps1 downloaded successfully"
+          Write-Host "✅ Files deployed successfully in current directory."
 
       - name: ⚔️ Execute EnigMano Instance Script
         shell: pwsh
         run: |
-          Write-Host "🚦 Initiating EnigMano-Instance.ps1"
+          Write-Host "🚦 Starting EnigMano-Instance.ps1 Execution..."
           powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-Instance.ps1"
 
       - name: 💠 Final Status
         if: always()
         shell: pwsh
         run: |
-          Write-Host "✅ EnigMano Instance $env:INSTANCE_ID completed execution."
-          Write-Host "🔋 Powered by: SHAHZAIB-YT"
-          Write-Host "🏁 EnigMano deployment executed with tactical precision."
+          Write-Host "==============================================="
+          Write-Host "🏁 Deployment process finished."
+          Write-Host "🔋 Powered by: Mr Alone"
+          Write-Host "==============================================="
