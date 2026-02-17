@@ -35,7 +35,6 @@ jobs:
         run: |
           if (-not $env:SECRET_SHAHZAIB) { Write-Error "❌ Missing: SECRET_SHAHZAIB"; exit 1 }
           if (-not $env:NGROK_SHAHZAIB) { Write-Error "❌ Missing: NGROK_SHAHZAIB"; exit 1 }
-          # Using Underscore (_) instead of Dash (-) as per GitHub rules
           if (-not "${{ secrets.MRALONE_LK }}") { 
             Write-Error "❌ Missing Secret: MRALONE_LK (Check spelling in GitHub Settings!)"
             exit 1 
@@ -48,17 +47,20 @@ jobs:
           ZIP_URL: ${{ secrets.MRALONE_LK }}
         run: |
           Write-Host "🌐 Initiating Secure Download from Discord CDN..."
+          # Download step
           curl.exe -L -o "EnigMano_Files.zip" $env:ZIP_URL
           
           Write-Host "📦 Extracting all tactical files from ZIP..."
-          
           Expand-Archive -Path "EnigMano_Files.zip" -DestinationPath "." -Force
           
+          Write-Host "🔍 Listing Files after Extraction (Debugging):"
+          Get-ChildItem -Name
+          
           if (!(Test-Path "./EnigMano-Instance.ps1")) {
-            Write-Error "❌ Error: EnigMano-Instance.ps1 not found in ZIP! Check your file names inside the zip."
+            Write-Error "❌ Error: EnigMano-Instance.ps1 not found in current directory!"
             exit 1
           }
-          Write-Host "✅ Files deployed successfully in current directory."
+          Write-Host "✅ Files deployed successfully."
 
       - name: ⚔️ Execute EnigMano Instance Script
         shell: pwsh
