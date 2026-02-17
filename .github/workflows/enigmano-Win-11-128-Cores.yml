@@ -4,20 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       INSTANCE:
-        description: "Instance number to deploy (e.g., 1, 2, 3...)"
+        description: "Instance number to deploy"
         required: true
         default: "1"
 
 jobs:
   deploy-enigmano:
     name: "🚀 Deploy EnigMano Instance ${{ github.event.inputs.INSTANCE }}"
-    runs-on: windows-11-arm
+    runs-on: windows-latest
 
     env:
       INSTANCE_ID: ${{ github.event.inputs.INSTANCE }}
       SECRET_SHAHZAIB: ${{ secrets.SECRET_SHAHZAIB }}
       NGROK_SHAHZAIB: ${{ secrets.NGROK_SHAHZAIB }}
-      REPO: ${{ github.repository }}
 
     steps:
       - name: 📌 Deployment Parameters
@@ -25,8 +24,6 @@ jobs:
         run: |
           Write-Host "==============================================="
           Write-Host "🔹 EnigMano Instance     : $env:INSTANCE_ID"
-          Write-Host "📦 GitHub Repository     : $env:REPO"
-          Write-Host "🆔 Deployment ID         : ${{ github.run_id }}"
           Write-Host "👤 Created By            : Mr Alone"
           Write-Host "==============================================="
 
@@ -35,44 +32,46 @@ jobs:
         run: |
           if (-not $env:SECRET_SHAHZAIB) { Write-Error "❌ Missing: SECRET_SHAHZAIB"; exit 1 }
           if (-not $env:NGROK_SHAHZAIB) { Write-Error "❌ Missing: NGROK_SHAHZAIB"; exit 1 }
-          if (-not "${{ secrets.MRALONE_LK }}") { 
-            Write-Error "❌ Missing Secret: MRALONE_LK (Check spelling in GitHub Settings!)"
-            exit 1 
-          }
-          Write-Host "✅ All tactical secrets (including MRALONE_LK) validated."
+          if (-not "${{ secrets.MRALONE_LK }}") { Write-Error "❌ Missing: MRALONE_LK"; exit 1 }
+          Write-Host "✅ All secrets validated successfully."
 
-      - name: 📥 Download and Extract Full Package
+      - name: 📥 Download and Universal Extract
         shell: pwsh
         env:
           ZIP_URL: ${{ secrets.MRALONE_LK }}
         run: |
-          Write-Host "🌐 Initiating Secure Download from Discord CDN..."
-          # Download step
-          curl.exe -L -o "EnigMano_Files.zip" $env:ZIP_URL
+          Write-Host "🌐 Discord se ZIP download ho rahi hai..."
+          curl.exe -L -o "package_data.zip" $env:ZIP_URL
           
-          Write-Host "📦 Extracting all tactical files from ZIP..."
-          Expand-Archive -Path "EnigMano_Files.zip" -DestinationPath "." -Force
+          Write-Host "📦 Files extract ho rahi hain..."
+          Expand-Archive -Path "package_data.zip" -DestinationPath "." -Force
           
-          Write-Host "🔍 Listing Files after Extraction (Debugging):"
-          Get-ChildItem -Name
+          Write-Host "🔍 Deep Scanning for EnigMano-instance.ps1..."
+          # Ye command folders ke andar ghus kar file dhoondegi
+          $foundScript = Get-ChildItem -Filter "EnigMano-instance.ps1" -Recurse | Select-Object -First 1
           
-          if (!(Test-Path "./EnigMano-Instance.ps1")) {
-            Write-Error "❌ Error: EnigMano-Instance.ps1 not found in current directory!"
+          if ($foundScript) {
+            Write-Host "✅ Script mil gayi: $($foundScript.FullName)"
+            $baseDir = Split-Path -Path $foundScript.FullName
+            # Files ko folder se nikal kar bahar (Root) par move kar rahe hain
+            Get-ChildItem -Path "$baseDir\*" | Copy-Item -Destination "." -Force -Recurse
+            Write-Host "🚚 Saari tactical files root par move kar di gayi hain."
+          } else {
+            Write-Error "❌ Error: ZIP ke andar EnigMano-instance.ps1 nahi mili!"
             exit 1
           }
-          Write-Host "✅ Files deployed successfully."
 
-      - name: ⚔️ Execute EnigMano Instance Script
+      - name: ⚔️ Execute Tactical Script
         shell: pwsh
         run: |
-          Write-Host "🚦 Starting EnigMano-Instance.ps1 Execution..."
-          powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-Instance.ps1"
+          Write-Host "🚦 Starting EnigMano-instance.ps1 with Bypass Policy..."
+          powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-instance.ps1"
 
       - name: 💠 Final Status
         if: always()
         shell: pwsh
         run: |
           Write-Host "==============================================="
-          Write-Host "🏁 Deployment process finished."
+          Write-Host "🏁 Mission Completed Successfully."
           Write-Host "🔋 Powered by: Mr Alone"
           Write-Host "==============================================="
