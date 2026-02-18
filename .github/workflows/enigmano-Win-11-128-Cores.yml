@@ -1,76 +1,74 @@
-name: "⚡ EnigMano Win11 + 128 Cores Deployment"
+name: "鈿� EnigMano Win11 + 128 Cores Deployment"
 
 on:
   workflow_dispatch:
     inputs:
       INSTANCE:
-        description: "Instance number to deploy"
+        description: "Instance number to deploy (e.g., 1, 2, 3...)"
         required: true
         default: "1"
 
 jobs:
   deploy-enigmano:
-    name: "🚀 Deploy EnigMano Instance ${{ github.event.inputs.INSTANCE }}"
-    runs-on: windows-latest
+    name: "馃殌 Deploy EnigMano Instance ${{ github.event.inputs.INSTANCE }}"
+    runs-on: windows-11-arm
 
     env:
       INSTANCE_ID: ${{ github.event.inputs.INSTANCE }}
       SECRET_SHAHZAIB: ${{ secrets.SECRET_SHAHZAIB }}
       NGROK_SHAHZAIB: ${{ secrets.NGROK_SHAHZAIB }}
+      REPO: ${{ github.repository }}
+      WORKFLOW_FILE: "enigmano-Win-11-128-Cores.yml"
+      DEPLOYMENT_ID: ${{ github.run_id }}
 
     steps:
-      - name: 📌 Deployment Parameters
+      - name: 馃搶 Deployment Parameters
         shell: pwsh
         run: |
+          $prevInstance = [int]$env:INSTANCE_ID - 1
           Write-Host "==============================================="
-          Write-Host "🔹 EnigMano Instance     : $env:INSTANCE_ID"
-          Write-Host "👤 Created By            : Mr Alone"
+          Write-Host "馃敼 EnigMano Instance     : $env:INSTANCE_ID"
+          Write-Host "馃敘 Previous Instance     : $prevInstance"
+          Write-Host "馃摝 GitHub Repository     : $env:REPO"
+          Write-Host "馃攣 Deployment Workflow   : $env:WORKFLOW_FILE"
+          Write-Host "馃啍 Deployment ID         : $env:DEPLOYMENT_ID"
           Write-Host "==============================================="
 
-      - name: 🔐 Validate Secrets
+      - name: 馃攼 Validate Secrets
         shell: pwsh
         run: |
-          if (-not $env:SECRET_SHAHZAIB) { Write-Error "❌ Missing: SECRET_SHAHZAIB"; exit 1 }
-          if (-not $env:NGROK_SHAHZAIB) { Write-Error "❌ Missing: NGROK_SHAHZAIB"; exit 1 }
-          if (-not "${{ secrets.MRALONE_LK }}") { Write-Error "❌ Missing: MRALONE_LK"; exit 1 }
-          Write-Host "✅ Secrets validated."
-
-      - name: 📥 Download and Force Extract
-        shell: pwsh
-        env:
-          ZIP_URL: ${{ secrets.MRALONE_LK }}
-        run: |
-          Write-Host "🌐 Discord se package uthaya ja raha hai..."
-          curl.exe -L -o "package.zip" $env:ZIP_URL
-          
-          Write-Host "📦 Files ko Force Extract kiya ja raha hai..."
-          # Hum ab tar.exe use kar rahe hain jo Expand-Archive se behtar hai
-          mkdir temp_extract
-          tar.exe -xf package.zip -C temp_extract
-          
-          Write-Host "🔍 Script dhoondi ja rahi hai..."
-          $script = Get-ChildItem -Path "temp_extract" -Filter "EnigMano-instance.ps1" -Recurse | Select-Object -First 1
-          
-          if ($script) {
-            Write-Host "✅ Script mil gayi: $($script.FullName)"
-            $dir = Split-Path $script.FullName
-            Copy-Item -Path "$dir\*" -Destination "." -Recurse -Force
-            Write-Host "🚚 Saari files root par move kar di gayi hain."
-          } else {
-            Write-Error "❌ Error: ZIP mein EnigMano-instance.ps1 nahi mili!"
+          if (-not $env:SECRET_SHAHZAIB) {
+            Write-Error "鉂� Missing GitHub Secret: SECRET_SHAHZAIB"
             exit 1
           }
+          if (-not $env:NGROK_SHAHZAIB) {
+            Write-Error "鉂� Missing Ngrok Auth Token: NGROK_SHAHZAIB"
+            exit 1
+          }
+          Write-Host "鉁� All required secrets validated successfully"
 
-      - name: ⚔️ Execute Tactical Script
+      - name: 馃摜 Download EnigMano-instance.ps1
         shell: pwsh
         run: |
-          Write-Host "🚦 EnigMano-instance.ps1 start ho rahi hai..."
-          powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-instance.ps1"
+          $url = "https://gitlab.com/Shahzaib-YT/enigmano-windows-11-with-sound/-/raw/main/EnigMano-Instance.ps1"
+          Write-Host "馃寪 Downloading EnigMano-Instance.ps1..."
+          Invoke-WebRequest -Uri $url -OutFile "EnigMano-Instance.ps1" -UseBasicParsing
+          if (!(Test-Path "./EnigMano-Instance.ps1")) {
+            Write-Error "鉂� Failed to download EnigMano-Instance.ps1"
+            exit 1
+          }
+          Write-Host "鉁� EnigMano-Instance.ps1 downloaded successfully"
 
-      - name: 💠 Final Status
+      - name: 鈿旓笍 Execute EnigMano Instance Script
+        shell: pwsh
+        run: |
+          Write-Host "馃殾 Initiating EnigMano-Instance.ps1"
+          powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-Instance.ps1"
+
+      - name: 馃挔 Final Status
         if: always()
         shell: pwsh
         run: |
-          Write-Host "==============================================="
-          Write-Host "🏁 Mission Completed. Powered by: Mr Alone"
-          Write-Host "==============================================="
+          Write-Host "鉁� EnigMano Instance $env:INSTANCE_ID completed execution."
+          Write-Host "馃攱 Powered by: SHAHZAIB-YT"
+          Write-Host "馃弫 EnigMano deployment executed with tactical precision."
